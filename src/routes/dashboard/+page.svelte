@@ -430,10 +430,12 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label
+                for="member-name"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Name</label
               >
               <input
+                id="member-name"
                 bind:value={newMember.name}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Full name"
@@ -441,10 +443,12 @@
             </div>
             <div>
               <label
+                for="member-email"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Email</label
               >
               <input
+                id="member-email"
                 bind:value={newMember.email}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Email address"
@@ -452,10 +456,12 @@
             </div>
             <div>
               <label
+                for="member-role"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Role</label
               >
               <select
+                id="member-role"
                 bind:value={newMember.role}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
               >
@@ -594,10 +600,12 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label
+                for="project-title"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Title</label
               >
               <input
+                id="project-title"
                 bind:value={newProject.title}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Project title"
@@ -605,10 +613,12 @@
             </div>
             <div>
               <label
+                for="project-status"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Status</label
               >
               <select
+                id="project-status"
                 bind:value={newProject.status}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
               >
@@ -619,10 +629,12 @@
             </div>
             <div>
               <label
+                for="project-deadline"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Deadline</label
               >
               <input
+                id="project-deadline"
                 type="date"
                 bind:value={newProject.deadline}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
@@ -754,10 +766,12 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label
+                for="blog-title"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Title</label
               >
               <input
+                id="blog-title"
                 bind:value={newBlog.title}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Blog title"
@@ -765,10 +779,12 @@
             </div>
             <div>
               <label
+                for="blog-author"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Author</label
               >
               <input
+                id="blog-author"
                 bind:value={newBlog.author}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Author name"
@@ -776,10 +792,12 @@
             </div>
             <div>
               <label
+                for="blog-status"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Status</label
               >
               <select
+                id="blog-status"
                 bind:value={newBlog.status}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
               >
@@ -790,10 +808,14 @@
           </div>
           <div class="mb-4">
             <label
+              for="blog-content"
               class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >Content</label
+            >
+              Content
+            </label>
             >
             <textarea
+              id="blog-content"
               bind:value={newBlog.content}
               rows="4"
               class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
@@ -929,10 +951,12 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label
+                for="event-title"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Title</label
               >
               <input
+                id="event-title"
                 bind:value={newEvent.title}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Event title"
@@ -940,10 +964,12 @@
             </div>
             <div>
               <label
+                for="event-date"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Date</label
               >
               <input
+                id="event-date"
                 type="date"
                 bind:value={newEvent.date}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
@@ -951,10 +977,12 @@
             </div>
             <div>
               <label
+                for="event-location"
                 class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                 >Location</label
               >
               <input
+                id="event-location"
                 bind:value={newEvent.location}
                 class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
                 placeholder="Event location"
@@ -980,10 +1008,12 @@
           </div>
           <div>
             <label
+              for="event-description"
               class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >Description</label
             >
             <textarea
+              id="event-description"
               bind:value={newEvent.description}
               rows="3"
               class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
