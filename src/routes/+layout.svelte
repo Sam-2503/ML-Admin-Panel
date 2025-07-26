@@ -35,7 +35,7 @@
 							Welcome, {$user.email} ({$user.role})
 						</span>
 						<button
-							on:click={handleSignOut}
+							onclick={handleSignOut}
 							class="text-sm text-gray-500 hover:text-gray-700"
 						>
 							Sign out
