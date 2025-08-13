@@ -34,6 +34,53 @@ A comprehensive admin panel for managing the Machine Learning Club at NIT Silcha
 - ✅ View club events
 - ✅ Track project progress
 
+### Admin Panel Routes
+
+#### 🏠 Dashboard (`/`)
+
+- Overview of all club activities
+- Quick access to member, project, blog, and event management
+- Dark/light theme toggle
+- Real-time statistics and summaries
+
+#### 👥 Members Management (`/members`)
+
+- View all club members with search and filtering
+- Add new members with roles (admin, editor, viewer)
+- Edit member information and roles
+- Delete members
+- Responsive table layout with role-based styling
+
+#### 🚀 Projects Management (`/projects`)
+
+- Review member-submitted projects in a modern card layout
+- Approve, reject, or mark projects as pending
+- View project details including GitHub links and descriptions
+- Filter by status (pending, approved, rejected) and category
+- Search functionality across titles, authors, and descriptions
+- Delete projects with confirmation
+
+#### 📝 Blogs Management (`/blogs`)
+
+- Review member-submitted blog posts with rich metadata
+- Approve, reject, or mark blogs as pending
+- View blog excerpts, read times, and tags
+- Filter by status and category
+- Search across titles, authors, and content
+- Status summary dashboard with counts
+- Delete blogs with confirmation
+
+#### 📅 Events Management (`/events`)
+
+- Create and manage club events with comprehensive forms
+- Set event details (date, time, location, capacity, duration)
+- Track registration numbers with visual progress bars
+- Update event status (upcoming, ongoing, completed, cancelled)
+- Filter by status and category
+- Search functionality across event details
+- Modern card-based layout with event images
+- Add new events through modal forms
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: SvelteKit with TypeScript
@@ -136,6 +183,25 @@ The application uses the following main tables:
    - Full system access
    - Can manage users and roles
    - Can send invitations
+
+## 🎯 Current Demo State
+
+**Note**: This is currently a UI demonstration with dummy data. The admin panel includes:
+
+- ✅ Complete UI components for all routes
+- ✅ Responsive design with Tailwind CSS
+- ✅ Interactive forms and modals
+- ✅ Search and filtering functionality
+- ✅ Status management (approve/reject/update)
+- ✅ Modern card and table layouts
+- ✅ Server-side route handlers (ready for database integration)
+
+**To connect to a real database**:
+
+1. Update the server files (`+page.server.ts`) to use your database client
+2. Replace the dummy data arrays with database queries
+3. Update the authentication system in `lib/auth.ts`
+4. Configure your environment variables
 
 ### Row Level Security (RLS)
 
