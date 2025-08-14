@@ -15,7 +15,7 @@
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     loading = true;
-    error = "";
+    error = "";0
 
     try {
       const result: SignInResult = await signIn(email, password);
