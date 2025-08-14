@@ -14,11 +14,11 @@ export async function initializeAuth() {
     } = await supabase.auth.getSession();
 
     if (session?.user) {
-      // Fetch user data from our custom users table
+      // Fetch user data from our custom users table using auth_id
       const { data: userData, error } = await supabase
         .from("users")
         .select("*")
-        .eq("id", session.user.id)
+        .eq("auth_id", session.user.id)
         .single();
 
       if (error) throw error;
@@ -45,11 +45,11 @@ export async function signIn(email: string, password: string) {
     if (error) throw error;
 
     if (data.user) {
-      // Fetch user data from our custom users table
+      // Fetch user data from our custom users table using auth_id
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("*")
-        .eq("id", data.user.id)
+        .eq("auth_id", data.user.id)
         .single();
 
       if (userError) throw userError;
@@ -133,7 +133,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     const { data: userData, error } = await supabase
       .from("users")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("auth_id", session.user.id)
       .single();
 
     if (!error && userData) {

@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { createClient } from '@supabase/supabase-js';
-  import { goto } from '$app/navigation';
+  import { createClient } from "@supabase/supabase-js";
+  import {
+    PUBLIC_SUPABASE_URL,
+    PUBLIC_SUPABASE_ANON_KEY,
+  } from "$env/static/public";
+  import { goto } from "$app/navigation";
 
-  // Replace with your Supabase credentials
-  const supabaseUrl = 'https://bhrxieqrtfudpkupdtsx.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocnhpZXFydGZ1ZHBrdXBkdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MDc0MzYsImV4cCI6MjA2OTA4MzQzNn0.B_Nb7BcDqk9Vt-z4AwDcjDaTRkpCb3-NqGePSbhyCmU';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabaseUrl = PUBLIC_SUPABASE_URL;
+  const supabaseKey = PUBLIC_SUPABASE_ANON_KEY;
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   let email = '';
   let password = '';
@@ -32,8 +35,8 @@
     }
 
     // Insert user into users table as super_admin
-    const userId = data.user?.id;
-    if (!userId) {
+    const authId = supabase.auth.getUser().data.user?.id;
+    if (!authId) {
       error = "Could not get user ID after registration.";
       loading = false;
       return;
@@ -41,16 +44,21 @@
 
     const { error: dbError } = await supabase
       .from('users')
-      .insert([{ id: userId, email, role: 'super_admin' }]);
+      .insert([{
+        email,
+        role: 'super_admin',
+        created_at: new Date().toISOString(),
+        auth_id: authId
+      }]);
 
     if (dbError) {
       error = dbError.message;
+      console.log(dbError);
       loading = false;
       return;
     }
 
     success = "Super admin registered successfully!";
-    // Optionally redirect to dashboard
     setTimeout(() => goto('/dashboard'), 1500);
     loading = false;
   }
@@ -61,12 +69,24 @@
     <h1 class="text-2xl font-bold text-white text-center">Register Super Admin</h1>
     <form class="space-y-6" on:submit|preventDefault={handleRegister}>
       <div>
-        <label class="block text-white mb-2">Email</label>
-        <input type="email" bind:value={email} required class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700" />
+        <label for="email" class="block text-white mb-2">Email</label>
+        <input
+          id="email"
+          type="email"
+          bind:value={email}
+          required
+          class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700"
+        />
       </div>
       <div>
-        <label class="block text-white mb-2">Password</label>
-        <input type="password" bind:value={password} required class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700" />
+        <label for="password" class="block text-white mb-2">Password</label>
+        <input
+          id="password"
+          type="password"
+          bind:value={password}
+          required
+          class="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-700"
+        />
       </div>
       <button type="submit" class="w-full py-2 bg-yellow-700 text-white rounded font-bold" disabled={loading}>
         {loading ? 'Registering...' : 'Register as Super Admin'}
@@ -82,4 +102,4 @@
       After registration, you can invite other members from the dashboard.
     </p>
   </div>
-  </div>
+</div>

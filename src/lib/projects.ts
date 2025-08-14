@@ -2,7 +2,7 @@ import { supabase, type Project } from "./supabase";
 
 // Create new project (Members can create their own projects)
 export async function createProject(
-  projectData: Omit<Project, "id" | "created_at" | "updated_at">
+  projectData: Omit<Project, "id" | "created_at">
 ) {
   try {
     const { data, error } = await supabase
@@ -10,7 +10,6 @@ export async function createProject(
       .insert({
         ...projectData,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -25,15 +24,14 @@ export async function createProject(
 }
 
 // Get all projects (Admins and Super Admins can see all, Members see their own)
-export async function getAllProjects(userId?: string, userRole?: string) {
+export async function getAllProjects(authId?: string, userRole?: string) {
   try {
     let query = supabase
       .from("projects")
       .select(
         `
         *,
-        user:users!projects_user_id_fkey(email),
-        profile:profiles!projects_user_id_fkey(first_name, last_name)
+        user:users!projects_user_id_fkey(email, auth_id)
       `
       )
       .order("created_at", { ascending: false });
@@ -43,9 +41,9 @@ export async function getAllProjects(userId?: string, userRole?: string) {
       userRole &&
       userRole !== "admin" &&
       userRole !== "super_admin" &&
-      userId
+      authId
     ) {
-      query = query.eq("user_id", userId);
+      query = query.eq("user_id", authId);
     }
 
     const { data, error } = await query;
@@ -60,15 +58,14 @@ export async function getAllProjects(userId?: string, userRole?: string) {
 }
 
 // Get project by ID
-export async function getProjectById(projectId: string) {
+export async function getProjectById(projectId: number) {
   try {
     const { data, error } = await supabase
       .from("projects")
       .select(
         `
         *,
-        user:users!projects_user_id_fkey(email),
-        profile:profiles!projects_user_id_fkey(first_name, last_name)
+        user:users!projects_user_id_fkey(email, auth_id)
       `
       )
       .eq("id", projectId)
@@ -85,9 +82,9 @@ export async function getProjectById(projectId: string) {
 
 // Update project (Users can only update their own projects)
 export async function updateProject(
-  projectId: string,
+  projectId: number,
   projectData: Partial<Project>,
-  userId: string
+  authId: string
 ) {
   try {
     // Check if user owns the project
@@ -99,7 +96,7 @@ export async function updateProject(
 
     if (checkError) throw checkError;
 
-    if (existingProject.user_id !== userId) {
+    if (existingProject.user_id !== authId) {
       return { success: false, error: "You can only update your own projects" };
     }
 
@@ -124,8 +121,8 @@ export async function updateProject(
 
 // Delete project (Users can only delete their own projects, Admins can delete any)
 export async function deleteProject(
-  projectId: string,
-  userId: string,
+  projectId: number,
+  authId: string,
   userRole?: string
 ) {
   try {
@@ -139,7 +136,7 @@ export async function deleteProject(
 
       if (checkError) throw checkError;
 
-      if (existingProject.user_id !== userId) {
+      if (existingProject.user_id !== authId) {
         return {
           success: false,
           error: "You can only delete your own projects",
@@ -162,12 +159,12 @@ export async function deleteProject(
 }
 
 // Get user's projects
-export async function getUserProjects(userId: string) {
+export async function getUserProjects(authId: string) {
   try {
     const { data, error } = await supabase
       .from("projects")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", authId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;

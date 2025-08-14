@@ -1,9 +1,7 @@
 import { supabase, type Blog } from "./supabase";
 
 // Create new blog (Members can create blogs)
-export async function createBlog(
-  blogData: Omit<Blog, "id" | "created_at" | "updated_at">
-) {
+export async function createBlog(blogData: Omit<Blog, "id" | "created_at">) {
   try {
     const { data, error } = await supabase
       .from("blogs")
@@ -11,7 +9,6 @@ export async function createBlog(
         ...blogData,
         status: "pending", // All new blogs start as pending
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -26,15 +23,14 @@ export async function createBlog(
 }
 
 // Get all blogs (Admins see all, Members see their own)
-export async function getAllBlogs(userId?: string, userRole?: string) {
+export async function getAllBlogs(authId?: string, userRole?: string) {
   try {
     let query = supabase
       .from("blogs")
       .select(
         `
         *,
-        user:users!blogs_user_id_fkey(email),
-        profile:profiles!blogs_user_id_fkey(first_name, last_name)
+        user:users!blogs_user_id_fkey(email, auth_id)
       `
       )
       .order("created_at", { ascending: false });
@@ -44,9 +40,9 @@ export async function getAllBlogs(userId?: string, userRole?: string) {
       userRole &&
       userRole !== "admin" &&
       userRole !== "super_admin" &&
-      userId
+      authId
     ) {
-      query = query.eq("user_id", userId);
+      query = query.eq("user_id", authId);
     }
 
     const { data, error } = await query;
@@ -61,15 +57,14 @@ export async function getAllBlogs(userId?: string, userRole?: string) {
 }
 
 // Get blog by ID
-export async function getBlogById(blogId: string) {
+export async function getBlogById(blogId: number) {
   try {
     const { data, error } = await supabase
       .from("blogs")
       .select(
         `
         *,
-        user:users!blogs_user_id_fkey(email),
-        profile:profiles!blogs_user_id_fkey(first_name, last_name)
+        user:users!blogs_user_id_fkey(email, auth_id)
       `
       )
       .eq("id", blogId)
@@ -86,9 +81,9 @@ export async function getBlogById(blogId: string) {
 
 // Update blog (Users can only update their own blogs)
 export async function updateBlog(
-  blogId: string,
+  blogId: number,
   blogData: Partial<Blog>,
-  userId: string
+  authId: string
 ) {
   try {
     // Check if user owns the blog
@@ -100,7 +95,7 @@ export async function updateBlog(
 
     if (checkError) throw checkError;
 
-    if (existingBlog.user_id !== userId) {
+    if (existingBlog.user_id !== authId) {
       return { success: false, error: "You can only update your own blogs" };
     }
 
@@ -137,9 +132,8 @@ export async function updateBlog(
 
 // Moderate blog (Admins and Super Admins only)
 export async function moderateBlog(
-  blogId: string,
-  status: "approved" | "rejected",
-  moderatorId: string
+  blogId: number,
+  status: "approved" | "rejected"
 ) {
   try {
     const { data, error } = await supabase
@@ -163,8 +157,8 @@ export async function moderateBlog(
 
 // Delete blog (Users can only delete their own blogs, Admins can delete any)
 export async function deleteBlog(
-  blogId: string,
-  userId: string,
+  blogId: number,
+  authId: string,
   userRole?: string
 ) {
   try {
@@ -178,7 +172,7 @@ export async function deleteBlog(
 
       if (checkError) throw checkError;
 
-      if (existingBlog.user_id !== userId) {
+      if (existingBlog.user_id !== authId) {
         return { success: false, error: "You can only delete your own blogs" };
       }
     }
@@ -194,37 +188,13 @@ export async function deleteBlog(
   }
 }
 
-// Get pending blogs (for admins to moderate)
-export async function getPendingBlogs() {
-  try {
-    const { data, error } = await supabase
-      .from("blogs")
-      .select(
-        `
-        *,
-        user:users!blogs_user_id_fkey(email),
-        profile:profiles!blogs_user_id_fkey(first_name, last_name)
-      `
-      )
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return { success: true, blogs: data };
-  } catch (error) {
-    console.error("Error getting pending blogs:", error);
-    return { success: false, error };
-  }
-}
-
 // Get user's blogs
-export async function getUserBlogs(userId: string) {
+export async function getUserBlogs(authId: string) {
   try {
     const { data, error } = await supabase
       .from("blogs")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", authId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
