@@ -1,65 +1,52 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  PUBLIC_SUPABASE_URL,
+  PUBLIC_SUPABASE_ANON_KEY,
+} from "$env/static/public";
 
-const supabaseUrl = "https://bhrxieqrtfudpkupdtsx.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocnhpZXFydGZ1ZHBrdXBkdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MDc0MzYsImV4cCI6MjA2OTA4MzQzNn0.B_Nb7BcDqk9Vt-z4AwDcjDaTRkpCb3-NqGePSbhyCmU";
+const supabaseUrl = PUBLIC_SUPABASE_URL;
+const supabaseKey = PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+if (!supabaseUrl || !supabaseKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 // Types for our database schema
-export interface User {
-  id: string;
-  email: string;
-  role: "member" | "admin" | "super_admin";
-  profile_completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type UserRole = "member" | "admin" | "super_admin";
 
-export interface Profile {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  bio?: string;
-  avatar_url?: string;
+export interface User {
+  id: number; // int8 PK
+  auth_id: string; // uuid, references auth.users.id
+  email: string;
+  role: UserRole;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Project {
-  id: string;
-  user_id: string;
+  id: number; // int8 PK
+  user_id: number; // int8, references users.id
   title: string;
   description: string;
-  github_url?: string;
-  live_url?: string;
   status: "in_progress" | "completed";
   created_at: string;
-  updated_at: string;
 }
 
 export interface Blog {
-  id: string;
-  user_id: string;
+  id: number; // int8 PK
+  user_id: number; // int8, references users.id
   title: string;
   content: string;
   status: "draft" | "pending" | "approved" | "rejected";
   created_at: string;
-  updated_at: string;
 }
 
-export interface Event {
-  id: string;
-  created_by: string;
-  title: string;
-  description: string;
-  date: string;
-  location?: string;
+export interface Invitation {
+  id: number; // int8 PK
+  email: string;
+  role: "member" | "admin";
+  invited_by: number; // int8, references users.id
+  accepted: boolean;
   created_at: string;
-  updated_at: string;
 }

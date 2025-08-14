@@ -117,8 +117,7 @@
           <input type="checkbox" class="form-checkbox text-white" />
           <span class="ml-2">Remember me</span>
         </label>
-        <a href="#" class="hover:underline text-yellow-700 font-bold"
-          >Forgot your password?</a
+        
         >
       </div>
 
