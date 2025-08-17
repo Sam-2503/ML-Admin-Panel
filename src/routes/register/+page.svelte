@@ -3,8 +3,8 @@
   import { goto } from '$app/navigation';
 
   // Replace with your Supabase credentials
-  const supabaseUrl = 'https://bhrxieqrtfudpkupdtsx.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocnhpZXFydGZ1ZHBrdXBkdHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MDc0MzYsImV4cCI6MjA2OTA4MzQzNn0.B_Nb7BcDqk9Vt-z4AwDcjDaTRkpCb3-NqGePSbhyCmU';
+  const supabaseUrl = 'https://qjtyffeqwsiyzjsgeczt.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqdHlmZmVxd3NpeXpqc2dlY3p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNTE5MjcsImV4cCI6MjA3MDcyNzkyN30.w3oPBbV3B2CP6xK0I2NMJXlef7Qo_FQJdVNAN1o9a0w';
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   let email = '';

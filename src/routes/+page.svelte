@@ -1,43 +1,7 @@
 <script lang="ts">
-  import { signIn } from "$lib/auth";
-  import { goto } from "$app/navigation";
-
-  let email: string = "";
-  let password: string = "";
-  let loading: boolean = false;
-  let error: string = "";
-
-  interface SignInResult {
-    success: boolean;
-    error?: Error | { message: string } | unknown;
-  }
-
-  async function handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    loading = true;
-    error = "";0
-
-    try {
-      const result: SignInResult = await signIn(email, password);
-      if (result.success) {
-        goto("/");
-      } else {
-        error =
-          result.error instanceof Error
-            ? result.error.message
-            : typeof result.error === "object" &&
-                result.error !== null &&
-                "message" in result.error
-              ? (result.error as { message: string }).message
-              : "Login failed";
-      }
-    } catch (err) {
-      error =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-    } finally {
-      loading = false;
-    }
-  }
+  let email = '';
+  let password = '';
+  export let form;
 </script>
 
 <div
@@ -59,27 +23,7 @@
       <h2 class="text-xl font-semibold text-white">Sign in to your account</h2>
     </div>
 
-    {#if error}
-      <div class="bg-red-100 border-l-4 border-red-500 p-4 rounded-md">
-        <div class="flex">
-          <svg
-            class="h-5 w-5 text-red-600 mr-2"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9a1 1 0 112 0v4a1 1 0 11-2 0V9zm1 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          <p class="text-sm text-red-800">{error}</p>
-        </div>
-      </div>
-    {/if}
-
-    <form class="space-y-6" on:submit|preventDefault={handleSubmit}>
+    <form method="POST" class="space-y-6">
       <div class="space-y-4">
         <div>
           <label for="email" class="block text-sm font-medium text-white mb-1"
@@ -117,53 +61,19 @@
           <input type="checkbox" class="form-checkbox text-white" />
           <span class="ml-2">Remember me</span>
         </label>
-        
-        >
+
       </div>
 
       <button
         type="submit"
-        disabled={loading}
         class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:opacity-50"
       >
-        {#if loading}
-          <svg
-            class="animate-spin h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4zm2 5.3A8 8 0 014 12H0c0 3.1 1.2 5.8 3 7.9l3-2.6z"
-            />
-          </svg>
-          Signing in...
-        {:else}
-          <svg
-            class="h-5 w-5 text-indigo-300"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Sign in
-        {/if}
+        Sign in
       </button>
+
+      {#if form?.error}
+        <div class="error">{form.error}</div>
+      {/if}
     </form>
   </div>
 </div>

@@ -1,10 +1,18 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
-    // Example: Prevent access to '/forbidden' and redirect to '/login'
-    if (event.url.pathname === '/dashboard') {
-        return Response.redirect('/login', 307);
-    }
+  const accessToken = event.cookies.get("sb-access-token");
 
-    return resolve(event);
+  // If accessing /dashboard and not signed in, redirect to /
+  if (event.url.pathname.startsWith("/dashboard") && !accessToken) {
+    throw redirect(307, "/");
+  }
+
+  // If accessing / and signed in, redirect to /dashboard
+  if (event.url.pathname === "/" && accessToken) {
+    throw redirect(307, "/dashboard");
+  }
+
+  return resolve(event);
 };
