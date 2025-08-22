@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
-import { supabase, type User } from "$lib/supabase";
+import { supabase, type Member } from "$lib/supabase";
 
 // User store
-export const user = writable<User | null>(null);
+export const user = writable<Member | null>(null);
 export const loading = writable(true);
 
 // Initialize auth state
