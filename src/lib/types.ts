@@ -1,12 +1,11 @@
-export type UserRole = 'member' | 'admin' | 'super-admin';
+export type UserRole = "member" | "admin" | "super_admin";
 
 export interface User {
-  id: string;
-  name: string;
+  id: number; // int8 PK
+  auth_id: string; // uuid, references auth.users.id
   email: string;
   role: UserRole;
-  avatar?: string;
-  createdAt: Date;
+  created_at: string;
 }
 
 export interface Session {
