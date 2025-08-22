@@ -16,11 +16,8 @@
 	}
 </script>
 
-{#if $loading}
-	<div class="flex items-center justify-center min-h-screen">
-		<div class="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-	</div>
-{:else if $user}
+
+{#if $user}
 	<div class="min-h-screen bg-gray-50">
 		<!-- Navigation -->
 		<nav class="bg-white shadow-sm border-b border-gray-200">

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { supabase, type User } from "./supabase";
+import { supabase, type User } from "$lib/supabase";
 
 // User store
 export const user = writable<User | null>(null);
@@ -41,6 +41,7 @@ export async function signIn(email: string, password: string) {
       email,
       password,
     });
+    console.log("Attempting to sign in with email:", email);
 
     if (error) throw error;
 

@@ -13,56 +13,43 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
-// Types for our database schema
-export interface User {
-  id: string;
-  email: string;
-  role: "member" | "admin" | "super_admin";
-  profile_completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// Types for our database schema based on actual database structure
+export type UserRole = "member" | "admin" | "super_admin";
 
-export interface Profile {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  bio?: string;
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
+export interface Member {
+  id: number; // bigint PK
+  created_at: string; // timestamp with time zone
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  role: string | null;
+  auth_id: string; // uuid, references auth.users.id
+  phone_num: string | null;
+  batch: number | null;
+  profile_status: boolean | null;
 }
 
 export interface Project {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  github_url?: string;
-  live_url?: string;
-  status: "in_progress" | "completed";
-  created_at: string;
-  updated_at: string;
+  id: number; // bigint PK
+  title: string | null;
+  status: string | null;
+  created_at: string; // timestamp with time zone
+  user_id: number | null; // bigint, references users_21.id
 }
 
 export interface Blog {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  status: "draft" | "pending" | "approved" | "rejected";
-  created_at: string;
-  updated_at: string;
+  id: number; // bigint PK
+  title: string | null;
+  status: string | null;
+  created_at: string; // timestamp with time zone
+  user_id: number | null; // bigint, references users_21.id
 }
 
-export interface Event {
-  id: string;
-  created_by: string;
-  title: string;
-  description: string;
-  date: string;
-  location?: string;
-  created_at: string;
-  updated_at: string;
+export interface Invitation {
+  id: number; // bigint PK
+  email: string | null;
+  role: string | null;
+  accepted: boolean | null;
+  created_at: string; // timestamp with time zone
+  invited_by: number | null; // bigint, references users_21.id
 }

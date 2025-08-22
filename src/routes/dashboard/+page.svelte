@@ -1,317 +1,233 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import { supabase } from "$lib/supabase";
+  
   // Current active tab
   let activeTab: "members" | "projects" | "blogs" | "events" = "members";
 
-  // Sample data
-  let members = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      role: "Admin",
-      joined: "2023-01-15",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "Member",
-      joined: "2023-02-20",
-    },
-    {
-      id: 3,
-      name: "Alex Johnson",
-      email: "alex@example.com",
-      role: "Moderator",
-      joined: "2023-03-10",
-    },
-  ];
+  // Data from Supabase
+  type Member = {
+    id: number;
+    created_at: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+    role: string | null;
+    auth_id: string;
+    phone_num: string | null;
+    batch: number | null;
+    profile_status: boolean | null;
+  };
+  
+  type Project = {
+    id: number;
+    title: string | null;
+    status: string | null;
+    created_at: string;
+    user_id: number | null;
+  };
+  
+  type Blog = {
+    id: number;
+    title: string | null;
+    status: string | null;
+    created_at: string;
+    user_id: number | null;
+  };
+  
+  type Event = {
+    id: number;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    duration: string;
+    location: string;
+    capacity: number;
+    registeredCount: number;
+    status: string;
+    category: string;
+    organizer: string;
+  };
+  
+  export let members: Member[];
+  export let projects: Project[];
+  export let blogs: Blog[];
+  export let events: Event[];
+  export let errorMembers: string | null;
+  export let errorProjects;
+  export let errorBlogs;
+  export let errorEvents;
+  export let connectionError;
 
-  let projects = [
-    {
-      id: 1,
-      title: "Image Classification",
-      status: "Active",
-      lead: "John Doe",
-      deadline: "2023-12-15",
-    },
-    {
-      id: 2,
-      title: "Sentiment Analysis",
-      status: "Completed",
-      lead: "Jane Smith",
-      deadline: "2023-06-30",
-    },
-    {
-      id: 3,
-      title: "Recommendation System",
-      status: "Planning",
-      lead: "Alex Johnson",
-      deadline: "2024-02-28",
-    },
-  ];
+  // Loading and error states
+  let loadingMembers = true;
+  let loadingProjects = true;
+  let loadingBlogs = true;
+  let loadingEvents = true;
 
-  let blogs = [
-    {
-      id: 1,
-      title: "Introduction to Machine Learning",
-      author: "John Doe",
-      status: "Published",
-      date: "2023-04-15",
-      content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-    },
-    {
-      id: 2,
-      title: "Deep Learning Fundamentals",
-      author: "Jane Smith",
-      status: "Draft",
-      date: "2023-05-20",
-      content:
-        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
-    },
-    {
-      id: 3,
-      title: "NLP Techniques Overview",
-      author: "Alex Johnson",
-      status: "Published",
-      date: "2023-06-10",
-      content:
-        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...",
-    },
-  ];
+  // Check Supabase connection
+  let supabaseConnected = false;
 
-  let events = [
-    {
-      id: 1,
-      title: "ML Workshop",
-      date: "2023-07-15",
-      location: "Room A101",
-      attendees: 45,
-      description: "Hands-on workshop covering basic ML concepts",
-    },
-    {
-      id: 2,
-      title: "Hackathon",
-      date: "2023-08-20",
-      location: "Main Auditorium",
-      attendees: 120,
-      description: "24-hour coding competition with prizes",
-    },
-    {
-      id: 3,
-      title: "Guest Lecture",
-      date: "2023-09-05",
-      location: "Online",
-      attendees: 85,
-      description: "Industry expert discussing AI trends",
-    },
-  ];
-
-  // Form states
-  let newMember = { name: "", email: "", role: "Member" };
-  let newProject = { title: "", status: "Planning", lead: "", deadline: "" };
-  let newBlog = { title: "", author: "", status: "Draft", content: "" };
-  let newEvent = { title: "", date: "", location: "", description: "" };
-
-  // Edit states
-  let editingMemberId: number | null = null;
-  let editingProjectId: number | null = null;
-  let editingBlogId: number | null = null;
-  let editingEventId: number | null = null;
-
-  // CRUD functions
-  function addMember() {
-    members = [
-      ...members,
-      {
-        ...newMember,
-        id: members.length + 1,
-        joined: new Date().toISOString().split("T")[0],
-      },
-    ];
-    newMember = { name: "", email: "", role: "Member" };
-  }
-
-  function editMember(id: number) {
-    const member = members.find((m) => m.id === id);
-    if (member) {
-      newMember = { ...member };
-      editingMemberId = id;
-    }
-  }
-
-  function updateMember() {
-    if (editingMemberId) {
-      members = members.map((m) =>
-        m.id === editingMemberId
-          ? {
-              ...m, // Keep all existing properties
-              ...newMember, // Override with updated values
-              id: editingMemberId, // Ensure ID remains unchanged
-            }
-          : m
-      );
-      newMember = { name: "", email: "", role: "Member" };
-      editingMemberId = null;
-    }
-  }
-
-  function cancelEdit() {
-    newMember = { name: "", email: "", role: "Member" };
-    editingMemberId = null;
-  }
-
-  function deleteMember(id: number) {
-    members = members.filter((m) => m.id !== id);
-  }
-
-  // Project CRUD
-  function addProject() {
-    projects = [
-      ...projects,
-      {
-        ...newProject,
-        id: projects.length + 1,
-      },
-    ];
-    newProject = { title: "", status: "Planning", lead: "", deadline: "" };
-  }
-
-  function editProject(id: number) {
-    const project = projects.find((p) => p.id === id);
-    if (project) {
-      newProject = { ...project };
-      editingProjectId = id;
-    }
-  }
-
-  function updateProject() {
-    if (editingProjectId) {
-      projects = projects.map((p) =>
-        p.id === editingProjectId ? { ...newProject, id: editingProjectId } : p
-      );
-      newProject = { title: "", status: "Planning", lead: "", deadline: "" };
-      editingProjectId = null;
-    }
-  }
-
-  function cancelProjectEdit() {
-    newProject = { title: "", status: "Planning", lead: "", deadline: "" };
-    editingProjectId = null;
-  }
-
-  function deleteProject(id: number) {
-    projects = projects.filter((p) => p.id !== id);
-  }
-
-  // Blog CRUD
-  function addBlog() {
-    blogs = [
-      ...blogs,
-      {
-        ...newBlog,
-        id: blogs.length + 1,
-        date: new Date().toISOString().split("T")[0],
-      },
-    ];
-    newBlog = { title: "", author: "", status: "Draft", content: "" };
-  }
-
-  function editBlog(id: number) {
-    const blog = blogs.find((b) => b.id === id);
-    if (blog) {
-      newBlog = { ...blog };
-      editingBlogId = id;
-    }
-  }
-
-  function updateBlog() {
-    if (editingBlogId) {
-      blogs = blogs.map((b) =>
-        b.id === editingBlogId
-          ? {
-              ...b, // Keep all existing properties
-              ...newBlog, // Override with updated values
-              id: editingBlogId, // Ensure ID remains the same
-            }
-          : b
-      );
-      newBlog = { title: "", author: "", status: "Draft", content: "" };
-      editingBlogId = null;
-    }
-  }
-
-  function cancelBlogEdit() {
-    newBlog = { title: "", author: "", status: "Draft", content: "" };
-    editingBlogId = null;
-  }
-
-  function deleteBlog(id: number) {
-    blogs = blogs.filter((b) => b.id !== id);
-  }
-
-  function publishBlog(id: number) {
-    blogs = blogs.map((b) => (b.id === id ? { ...b, status: "Published" } : b));
-  }
-
-  // Event CRUD
-  function addEvent() {
-    events = [
-      ...events,
-      {
-        ...newEvent,
-        id: events.length + 1,
-        attendees: 0,
-      },
-    ];
-    newEvent = { title: "", date: "", location: "", description: "" };
-  }
-
-  function editEvent(id: number) {
-    const event = events.find((e) => e.id === id);
-    if (event) {
-      newEvent = {
-        title: event.title,
-        date: event.date,
-        location: event.location,
-        description: event.description,
-      };
-      editingEventId = id;
-    }
-  }
-
-  function updateEvent() {
-    if (editingEventId) {
-      const event = events.find((e) => e.id === editingEventId);
-      if (event) {
-        events = events.map((e) =>
-          e.id === editingEventId
-            ? {
-                ...newEvent,
-                id: editingEventId,
-                attendees: event.attendees,
-              }
-            : e
-        );
+  // Fetch data from Supabase on mount
+  onMount(async () => {
+    console.log("Dashboard mounting, starting data fetch...");
+    
+    // Check if Supabase is connected
+    try {
+      const { data, error } = await supabase.from('members').select('count').limit(1);
+      if (error) {
+        console.error("Supabase connection test failed:", error);
+        if (error.message.includes("JWT")) {
+          connectionError = "Authentication error - please check your Supabase credentials";
+        } else if (error.message.includes("relation") || error.message.includes("does not exist")) {
+          connectionError = "Database tables not found - please run the database schema first";
+        } else {
+          connectionError = `Database connection failed: ${error.message}`;
+        }
+        supabaseConnected = false;
+      } else {
+        console.log("Supabase connection successful");
+        supabaseConnected = true;
+        connectionError = "";
       }
-      newEvent = { title: "", date: "", location: "", description: "" };
-      editingEventId = null;
+    } catch (error) {
+      console.error("Exception testing Supabase connection:", error);
+      connectionError = "Failed to connect to database - check your environment variables";
+      supabaseConnected = false;
     }
-  }
+    
+    if (!supabaseConnected) {
+      loadingMembers = false;
+      loadingProjects = false;
+      loadingBlogs = false;
+      loadingEvents = false;
+      return;
+    }
+    
+    // Members - fetch from members table
+    try {
+      console.log("Fetching members from 'members' table...");
+      const { data: membersData, error: membersError } = await supabase
+        .from("members")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Members response:", { data: membersData, error: membersError });
+      
+      if (membersError) {
+        errorMembers = membersError.message;
+        console.error("Members error:", membersError);
+      } else {
+        members = membersData || [];
+        console.log("Members loaded:", members);
+      }
+    } catch (error) {
+      errorMembers = "Error loading members";
+      console.error("Exception loading members:", error);
+    }
+    loadingMembers = false;
 
-  function cancelEventEdit() {
-    newEvent = { title: "", date: "", location: "", description: "" };
-    editingEventId = null;
-  }
+    // Projects - fetch from projects table
+    try {
+      console.log("Fetching projects from 'projects' table...");
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Projects response:", { data: projectsData, error: projectsError });
+      
+      if (projectsError) {
+        errorProjects = projectsError.message;
+        console.error("Projects error:", projectsError);
+      } else {
+        projects = projectsData || [];
+        console.log("Projects loaded:", projects);
+      }
+    } catch (error) {
+      errorProjects = "Error loading projects";
+      console.error("Exception loading projects:", error);
+    }
+    loadingProjects = false;
 
-  function deleteEvent(id: number) {
-    events = events.filter((e) => e.id !== id);
-  }
+    // Blogs - fetch from blogs table
+    try {
+      console.log("Fetching blogs from 'blogs' table...");
+      const { data: blogsData, error: blogsError } = await supabase
+        .from("blogs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Blogs response:", { data: blogsData, error: blogsError });
+      
+      if (blogsError) {
+        errorBlogs = blogsError.message;
+        console.error("Blogs error:", blogsError);
+      } else {
+        blogs = blogsData || [];
+        console.log("Blogs loaded:", blogs);
+      }
+    } catch (error) {
+      errorBlogs = "Error loading blogs";
+      console.error("Exception loading blogs:", error);
+    }
+    loadingBlogs = false;
+
+    // Events - use dummy data for now since table doesn't exist
+    try {
+      console.log("Setting dummy events data...");
+      // For now, we'll use some sample events since the table doesn't exist
+      events = [
+        {
+          id: 1,
+          title: "Introduction to Machine Learning Workshop",
+          description: "A hands-on workshop covering the basics of ML algorithms",
+          date: "2024-02-15",
+          time: "14:00",
+          duration: "3 hours",
+          location: "Room 301, Engineering Building",
+          capacity: 50,
+          registeredCount: 35,
+          status: "upcoming",
+          category: "Workshop",
+          organizer: "Dr. Sarah Chen"
+        },
+        {
+          id: 2,
+          title: "AI Ethics Panel Discussion",
+          description: "Join industry experts for a discussion on AI ethics",
+          date: "2024-02-20",
+          time: "18:00",
+          duration: "2 hours",
+          location: "Auditorium A",
+          capacity: 200,
+          registeredCount: 180,
+          status: "upcoming",
+          category: "Panel Discussion",
+          organizer: "Prof. Michael Rodriguez"
+        }
+      ];
+      console.log("Events loaded:", events);
+    } catch (error) {
+      errorEvents = "Error loading events";
+      console.error("Exception loading events:", error);
+    }
+    loadingEvents = false;
+    
+    console.log("All data fetching completed");
+  });
+
+
 
   // Theme toggle
   let darkMode = false;
   function toggleTheme() {
     darkMode = !darkMode;
+  }
+
+  function logout() {
+    window.location.href = "/logout";
   }
 </script>
 
@@ -320,14 +236,14 @@
 >
   <!-- Header -->
   <header
-    class={`${darkMode ? "bg-gray-800" : "bg-gray-800"} text-white p-4 shadow`}
+    class={`${darkMode ? "bg-gray-800" : "bg-gray-800"} text-white p-2 shadow`}
   >
     <div class="container mx-auto flex justify-between items-center max-w-7xl">
       <div class="flex items-center space-x-2">
         <img
-          src="data:image/png;base64,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"
+          src="/mlclublogo.png"
           alt="ML Club Logo"
-          class="h-10 w-10"
+          class="h-16"
         />
         <h1 class="text-xl font-bold">ML Club Admin Panel</h1>
       </div>
@@ -363,7 +279,10 @@
             </svg>
           {/if}
         </button>
-        <button class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+        <button
+          class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
+          on:click={logout}
+        >
           Logout
         </button>
       </div>
@@ -407,684 +326,216 @@
       <div
         class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Member Management</h2>
-          <button
-            class={`px-4 py-2 rounded ${darkMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}
-            on:click={() => {
-              newMember = { name: "", email: "", role: "Member" };
-              editingMemberId = null;
-            }}
-          >
-            {editingMemberId ? "Cancel Edit" : "Add New Member"}
-          </button>
-        </div>
-
-        <!-- Add/Edit Member Form -->
-        <div
-          class={`p-4 rounded-lg mb-6 ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
-        >
-          <h3 class="font-medium mb-3">
-            {editingMemberId ? "Edit Member" : "Add New Member"}
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label
-                for="member-name"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Name</label
-              >
-              <input
-                id="member-name"
-                bind:value={newMember.name}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Full name"
-              />
-            </div>
-            <div>
-              <label
-                for="member-email"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Email</label
-              >
-              <input
-                id="member-email"
-                bind:value={newMember.email}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <label
-                for="member-role"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Role</label
-              >
-              <select
-                id="member-role"
-                bind:value={newMember.role}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              >
-                <option value="Member">Member</option>
-                <option value="Moderator">Moderator</option>
-                <option value="Admin">Admin</option>
-              </select>
-            </div>
-            <div class="flex items-end space-x-2">
-              {#if editingMemberId}
-                <button
-                  on:click={updateMember}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Update
-                </button>
-              {:else}
-                <button
-                  on:click={addMember}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Add Member
-                </button>
-              {/if}
+        <h2 class="text-xl font-semibold mb-6">Member Management</h2>
+        
+        {#if connectionError}
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong class="font-bold">Connection Error:</strong>
+            <span class="block sm:inline">{connectionError}</span>
+            <div class="mt-2 text-sm">
+              <p>To fix this:</p>
+              <ol class="list-decimal list-inside ml-4">
+                <li>Create a <code>.env.local</code> file in your project root</li>
+                <li>Add your Supabase credentials:</li>
+                <li><code>PUBLIC_SUPABASE_URL=your_supabase_project_url</code></li>
+                <li><code>PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key</code></li>
+                <li>Restart your development server</li>
+              </ol>
             </div>
           </div>
-        </div>
-
-        <!-- Members Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-              <tr>
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Name</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Email</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Role</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Joined</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Actions</th
-                >
-              </tr>
-            </thead>
-            <tbody
-              class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-            >
-              {#each members as member (member.id)}
-                <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                  <td class="px-6 py-4 whitespace-nowrap">{member.name}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{member.email}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                      ${
-                        member.role === "Admin"
-                          ? darkMode
-                            ? "bg-purple-900 text-purple-200"
-                            : "bg-purple-100 text-purple-800"
-                          : member.role === "Moderator"
-                            ? darkMode
-                              ? "bg-blue-900 text-blue-200"
-                              : "bg-blue-100 text-blue-800"
-                            : darkMode
-                              ? "bg-green-900 text-green-200"
-                              : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {member.role}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">{member.joined}</td>
-                  <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      on:click={() => editMember(member.id)}
-                      class={darkMode
-                        ? "text-indigo-400 hover:text-indigo-300"
-                        : "text-indigo-600 hover:text-indigo-900"}>Edit</button
-                    >
-                    <button
-                      on:click={() => deleteMember(member.id)}
-                      class={darkMode
-                        ? "text-red-400 hover:text-red-300"
-                        : "text-red-600 hover:text-red-900"}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        {:else if loadingMembers}
+          <div>Loading members...</div>
+        {:else if errorMembers}
+          <div class="text-red-500">{errorMembers}</div>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
+                <tr>
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Name</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Email</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Role</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Batch</th
+                  >
                 </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody
+                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
+              >
+                {#each members as member (member.id)}
+                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      {member.first_name && member.last_name 
+                        ? `${member.first_name} ${member.last_name}` 
+                        : member.first_name || member.last_name || 'N/A'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.email || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.role || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.batch || 'N/A'}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
       </div>
     {:else if activeTab === "projects"}
       <!-- Projects Tab -->
       <div
         class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Project Management</h2>
-          <button
-            class={`px-4 py-2 rounded ${darkMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}
-            on:click={() => {
-              newProject = {
-                title: "",
-                status: "Planning",
-                lead: "",
-                deadline: "",
-              };
-              editingProjectId = null;
-            }}
-          >
-            {editingProjectId ? "Cancel Edit" : "Add New Project"}
-          </button>
-        </div>
-
-        <!-- Add/Edit Project Form -->
-        <div
-          class={`p-4 rounded-lg mb-6 ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
-        >
-          <h3 class="font-medium mb-3">
-            {editingProjectId ? "Edit Project" : "Add New Project"}
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label
-                for="project-title"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Title</label
-              >
-              <input
-                id="project-title"
-                bind:value={newProject.title}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Project title"
-              />
-            </div>
-            <div>
-              <label
-                for="project-status"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Status</label
-              >
-              <select
-                id="project-status"
-                bind:value={newProject.status}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              >
-                <option value="Planning">Planning</option>
-                <option value="Active">Active</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </div>
-            <div>
-              <label
-                for="project-deadline"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Deadline</label
-              >
-              <input
-                id="project-deadline"
-                type="date"
-                bind:value={newProject.deadline}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              />
-            </div>
-            <div class="flex items-end space-x-2">
-              {#if editingProjectId}
-                <button
-                  on:click={updateProject}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Update
-                </button>
-              {:else}
-                <button
-                  on:click={addProject}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Add Project
-                </button>
-              {/if}
-            </div>
-          </div>
-        </div>
-
-        <!-- Projects Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-              <tr>
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Title</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Status</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Lead</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Deadline</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Actions</th
-                >
-              </tr>
-            </thead>
-            <tbody
-              class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-            >
-              {#each projects as project (project.id)}
-                <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                  <td class="px-6 py-4 whitespace-nowrap">{project.title}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                      ${
-                        project.status === "Active"
-                          ? darkMode
-                            ? "bg-green-900 text-green-200"
-                            : "bg-green-100 text-green-800"
-                          : project.status === "Completed"
-                            ? darkMode
-                              ? "bg-gray-600 text-gray-200"
-                              : "bg-gray-100 text-gray-800"
-                            : darkMode
-                              ? "bg-yellow-900 text-yellow-200"
-                              : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">{project.lead}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{project.deadline}</td
+        <h2 class="text-xl font-semibold mb-6">Project Management</h2>
+        {#if loadingProjects}
+          <div>Loading projects...</div>
+        {:else if errorProjects}
+          <div class="text-red-500">{errorProjects}</div>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
+                <tr>
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Title</th
                   >
-                  <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      on:click={() => editProject(project.id)}
-                      class={darkMode
-                        ? "text-indigo-400 hover:text-indigo-300"
-                        : "text-indigo-600 hover:text-indigo-900"}>Edit</button
-                    >
-                    <button
-                      on:click={() => deleteProject(project.id)}
-                      class={darkMode
-                        ? "text-red-400 hover:text-red-300"
-                        : "text-red-600 hover:text-red-900"}
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Status</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Created By</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Created</th
+                  >
                 </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody
+                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
+              >
+                {#each projects as project (project.id)}
+                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.status || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.user_id || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.created_at?.split("T")[0] || 'N/A'}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
       </div>
     {:else if activeTab === "blogs"}
       <!-- Blogs Tab -->
       <div
         class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Blog Management</h2>
-          <button
-            class={`px-4 py-2 rounded ${darkMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}
-            on:click={() => {
-              newBlog = { title: "", author: "", status: "Draft", content: "" };
-              editingBlogId = null;
-            }}
-          >
-            {editingBlogId ? "Cancel Edit" : "Add New Blog"}
-          </button>
-        </div>
-
-        <!-- Add/Edit Blog Form -->
-        <div
-          class={`p-4 rounded-lg mb-6 ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
-        >
-          <h3 class="font-medium mb-3">
-            {editingBlogId ? "Edit Blog" : "Add New Blog"}
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label
-                for="blog-title"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Title</label
-              >
-              <input
-                id="blog-title"
-                bind:value={newBlog.title}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Blog title"
-              />
-            </div>
-            <div>
-              <label
-                for="blog-author"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Author</label
-              >
-              <input
-                id="blog-author"
-                bind:value={newBlog.author}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Author name"
-              />
-            </div>
-            <div>
-              <label
-                for="blog-status"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Status</label
-              >
-              <select
-                id="blog-status"
-                bind:value={newBlog.status}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              >
-                <option value="Draft">Draft</option>
-                <option value="Published">Published</option>
-              </select>
-            </div>
-          </div>
-          <div class="mb-4">
-            <label
-              for="blog-content"
-              class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-            >
-              Content
-            </label>
-            >
-            <textarea
-              id="blog-content"
-              bind:value={newBlog.content}
-              rows="4"
-              class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              placeholder="Blog content..."
-            ></textarea>
-          </div>
-          <div class="flex justify-end">
-            {#if editingBlogId}
-              <button
-                on:click={updateBlog}
-                class={`px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-              >
-                Update Blog
-              </button>
-            {:else}
-              <button
-                on:click={addBlog}
-                class={`px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-              >
-                Add Blog
-              </button>
-            {/if}
-          </div>
-        </div>
-
-        <!-- Blogs Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-              <tr>
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Title</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Author</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Status</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Date</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Actions</th
-                >
-              </tr>
-            </thead>
-            <tbody
-              class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-            >
-              {#each blogs as blog (blog.id)}
-                <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                  <td class="px-6 py-4 whitespace-nowrap">{blog.title}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{blog.author}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                      ${
-                        blog.status === "Published"
-                          ? darkMode
-                            ? "bg-green-900 text-green-200"
-                            : "bg-green-100 text-green-800"
-                          : darkMode
-                            ? "bg-yellow-900 text-yellow-200"
-                            : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {blog.status}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">{blog.date}</td>
-                  <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      on:click={() => editBlog(blog.id)}
-                      class={darkMode
-                        ? "text-indigo-400 hover:text-indigo-300"
-                        : "text-indigo-600 hover:text-indigo-900"}>Edit</button
-                    >
-                    <button
-                      on:click={() => deleteBlog(blog.id)}
-                      class={darkMode
-                        ? "text-red-400 hover:text-red-300"
-                        : "text-red-600 hover:text-red-900"}
-                    >
-                      Delete
-                    </button>
-                    {#if blog.status === "Draft"}
-                      <button
-                        on:click={() => publishBlog(blog.id)}
-                        class={darkMode
-                          ? "text-green-400 hover:text-green-300"
-                          : "text-green-600 hover:text-green-900"}
-                        >Publish</button
-                      >
-                    {/if}
-                  </td>
+        <h2 class="text-xl font-semibold mb-6">Blog Management</h2>
+        {#if loadingBlogs}
+          <div>Loading blogs...</div>
+        {:else if errorBlogs}
+          <div class="text-red-500">{errorBlogs}</div>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
+                <tr>
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Title</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Author</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Status</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Created</th
+                  >
                 </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody
+                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
+              >
+                {#each blogs as blog (blog.id)}
+                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.user_id || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.status || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.created_at?.split("T")[0] || 'N/A'}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
       </div>
     {:else if activeTab === "events"}
       <!-- Events Tab -->
       <div
         class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Event Management</h2>
-          <button
-            class={`px-4 py-2 rounded ${darkMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white`}
-            on:click={() => {
-              newEvent = { title: "", date: "", location: "", description: "" };
-              editingEventId = null;
-            }}
-          >
-            {editingEventId ? "Cancel Edit" : "Add New Event"}
-          </button>
-        </div>
-
-        <!-- Add/Edit Event Form -->
-        <div
-          class={`p-4 rounded-lg mb-6 ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
-        >
-          <h3 class="font-medium mb-3">
-            {editingEventId ? "Edit Event" : "Add New Event"}
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label
-                for="event-title"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Title</label
-              >
-              <input
-                id="event-title"
-                bind:value={newEvent.title}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Event title"
-              />
-            </div>
-            <div>
-              <label
-                for="event-date"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Date</label
-              >
-              <input
-                id="event-date"
-                type="date"
-                bind:value={newEvent.date}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              />
-            </div>
-            <div>
-              <label
-                for="event-location"
-                class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >Location</label
-              >
-              <input
-                id="event-location"
-                bind:value={newEvent.location}
-                class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-                placeholder="Event location"
-              />
-            </div>
-            <div class="flex items-end">
-              {#if editingEventId}
-                <button
-                  on:click={updateEvent}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Update
-                </button>
-              {:else}
-                <button
-                  on:click={addEvent}
-                  class={`w-full px-4 py-2 rounded ${darkMode ? "bg-green-600 hover:bg-green-700" : "bg-green-600 hover:bg-green-700"} text-white`}
-                >
-                  Add Event
-                </button>
-              {/if}
-            </div>
-          </div>
-          <div>
-            <label
-              for="event-description"
-              class={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >Description</label
-            >
-            <textarea
-              id="event-description"
-              bind:value={newEvent.description}
-              rows="3"
-              class={`w-full px-3 py-2 rounded-md ${darkMode ? "bg-gray-600 border-gray-500 text-white" : "border-gray-300"}`}
-              placeholder="Event description..."
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- Events Table -->
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-              <tr>
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Title</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Date</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Location</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Attendees</th
-                >
-                <th
-                  class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                  >Actions</th
-                >
-              </tr>
-            </thead>
-            <tbody
-              class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-            >
-              {#each events as event (event.id)}
-                <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                  <td class="px-6 py-4 whitespace-nowrap">{event.title}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{event.date}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">{event.location}</td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span
-                      class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${darkMode ? "bg-blue-900 text-blue-200" : "bg-blue-100 text-blue-800"}`}
-                    >
-                      {event.attendees}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      on:click={() => editEvent(event.id)}
-                      class={darkMode
-                        ? "text-indigo-400 hover:text-indigo-300"
-                        : "text-indigo-600 hover:text-indigo-900"}>Edit</button
-                    >
-                    <button
-                      on:click={() => deleteEvent(event.id)}
-                      class={darkMode
-                        ? "text-red-400 hover:text-red-300"
-                        : "text-red-600 hover:text-red-900"}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        <h2 class="text-xl font-semibold mb-6">Event Management</h2>
+        {#if loadingEvents}
+          <div>Loading events...</div>
+        {:else if errorEvents}
+          <div class="text-red-500">{errorEvents}</div>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
+                <tr>
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Title</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Date</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Location</th
+                  >
+                  <th
+                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
+                    >Created By</th
+                  >
                 </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody
+                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
+              >
+                {#each events as event (event.id)}
+                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
+                    <td class="px-6 py-4 whitespace-nowrap">{event.title}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{event.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{event.location}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{event.organizer}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
       </div>
     {/if}
   </main>
