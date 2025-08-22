@@ -55,10 +55,10 @@
   export let blogs: Blog[];
   export let events: Event[];
   export let errorMembers: string | null;
-  export let errorProjects;
-  export let errorBlogs;
-  export let errorEvents;
-  export let connectionError;
+  export let errorProjects: string | null;
+  export let errorBlogs: string | null;
+  export let errorEvents: string | null;
+  export let connectionError: string | null;
 
   // Loading and error states
   let loadingMembers = true;
