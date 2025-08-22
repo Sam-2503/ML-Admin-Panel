@@ -1,85 +1,224 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { supabase } from "$lib/supabase";
+  
   // Current active tab
   let activeTab: "members" | "projects" | "blogs" | "events" = "members";
 
   // Data from Supabase
   type Member = {
     id: number;
-    name: string;
-    email: string;
-    role: string;
-    created_at?: string;
+    created_at: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+    role: string | null;
+    auth_id: string;
+    phone_num: string | null;
+    batch: number | null;
+    profile_status: boolean | null;
   };
-  let members: Member[] = [];
+  
   type Project = {
     id: number;
-    title: string;
-    status: string;
-    lead: string;
-    deadline?: string;
+    title: string | null;
+    status: string | null;
+    created_at: string;
+    user_id: number | null;
   };
-  let projects: Project[] = [];
-  let blogs = [];
-  let events = [];
+  
+  type Blog = {
+    id: number;
+    title: string | null;
+    status: string | null;
+    created_at: string;
+    user_id: number | null;
+  };
+  
+  type Event = {
+    id: number;
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    duration: string;
+    location: string;
+    capacity: number;
+    registeredCount: number;
+    status: string;
+    category: string;
+    organizer: string;
+  };
+  
+  export let members: Member[];
+  export let projects: Project[];
+  export let blogs: Blog[];
+  export let events: Event[];
+  export let errorMembers: string | null;
+  export let errorProjects;
+  export let errorBlogs;
+  export let errorEvents;
+  export let connectionError;
 
   // Loading and error states
   let loadingMembers = true;
   let loadingProjects = true;
   let loadingBlogs = true;
   let loadingEvents = true;
-  let errorMembers = "";
-  let errorProjects = "";
-  let errorBlogs = "";
-  let errorEvents = "";
+
+  // Check Supabase connection
+  let supabaseConnected = false;
 
   // Fetch data from Supabase on mount
   onMount(async () => {
-    // Members
-    const { data: membersData, error: membersError } = await supabase
-      .from("users")
-      .select("*");
-    if (membersError) {
-      errorMembers = membersError.message;
-    } else {
-      members = membersData ?? [];
+    console.log("Dashboard mounting, starting data fetch...");
+    
+    // Check if Supabase is connected
+    try {
+      const { data, error } = await supabase.from('members').select('count').limit(1);
+      if (error) {
+        console.error("Supabase connection test failed:", error);
+        if (error.message.includes("JWT")) {
+          connectionError = "Authentication error - please check your Supabase credentials";
+        } else if (error.message.includes("relation") || error.message.includes("does not exist")) {
+          connectionError = "Database tables not found - please run the database schema first";
+        } else {
+          connectionError = `Database connection failed: ${error.message}`;
+        }
+        supabaseConnected = false;
+      } else {
+        console.log("Supabase connection successful");
+        supabaseConnected = true;
+        connectionError = "";
+      }
+    } catch (error) {
+      console.error("Exception testing Supabase connection:", error);
+      connectionError = "Failed to connect to database - check your environment variables";
+      supabaseConnected = false;
+    }
+    
+    if (!supabaseConnected) {
+      loadingMembers = false;
+      loadingProjects = false;
+      loadingBlogs = false;
+      loadingEvents = false;
+      return;
+    }
+    
+    // Members - fetch from members table
+    try {
+      console.log("Fetching members from 'members' table...");
+      const { data: membersData, error: membersError } = await supabase
+        .from("members")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Members response:", { data: membersData, error: membersError });
+      
+      if (membersError) {
+        errorMembers = membersError.message;
+        console.error("Members error:", membersError);
+      } else {
+        members = membersData || [];
+        console.log("Members loaded:", members);
+      }
+    } catch (error) {
+      errorMembers = "Error loading members";
+      console.error("Exception loading members:", error);
     }
     loadingMembers = false;
 
-    // Projects
-    const { data: projectsData, error: projectsError } = await supabase
-      .from("projects")
-      .select("*");
-    if (projectsError) {
-      errorProjects = projectsError.message;
-    } else {
-      projects = projectsData ?? [];
+    // Projects - fetch from projects table
+    try {
+      console.log("Fetching projects from 'projects' table...");
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Projects response:", { data: projectsData, error: projectsError });
+      
+      if (projectsError) {
+        errorProjects = projectsError.message;
+        console.error("Projects error:", projectsError);
+      } else {
+        projects = projectsData || [];
+        console.log("Projects loaded:", projects);
+      }
+    } catch (error) {
+      errorProjects = "Error loading projects";
+      console.error("Exception loading projects:", error);
     }
     loadingProjects = false;
 
-    // Blogs
-    const { data: blogsData, error: blogsError } = await supabase
-      .from("blogs")
-      .select("*");
-    if (blogsError) {
-      errorBlogs = blogsError.message;
-    } else {
-      blogs = blogsData ?? [];
+    // Blogs - fetch from blogs table
+    try {
+      console.log("Fetching blogs from 'blogs' table...");
+      const { data: blogsData, error: blogsError } = await supabase
+        .from("blogs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      console.log("Blogs response:", { data: blogsData, error: blogsError });
+      
+      if (blogsError) {
+        errorBlogs = blogsError.message;
+        console.error("Blogs error:", blogsError);
+      } else {
+        blogs = blogsData || [];
+        console.log("Blogs loaded:", blogs);
+      }
+    } catch (error) {
+      errorBlogs = "Error loading blogs";
+      console.error("Exception loading blogs:", error);
     }
     loadingBlogs = false;
 
-    // Events
-    const { data: eventsData, error: eventsError } = await supabase
-      .from("events")
-      .select("*");
-    if (eventsError) {
-      errorEvents = eventsError.message;
-    } else {
-      events = eventsData ?? [];
+    // Events - use dummy data for now since table doesn't exist
+    try {
+      console.log("Setting dummy events data...");
+      // For now, we'll use some sample events since the table doesn't exist
+      events = [
+        {
+          id: 1,
+          title: "Introduction to Machine Learning Workshop",
+          description: "A hands-on workshop covering the basics of ML algorithms",
+          date: "2024-02-15",
+          time: "14:00",
+          duration: "3 hours",
+          location: "Room 301, Engineering Building",
+          capacity: 50,
+          registeredCount: 35,
+          status: "upcoming",
+          category: "Workshop",
+          organizer: "Dr. Sarah Chen"
+        },
+        {
+          id: 2,
+          title: "AI Ethics Panel Discussion",
+          description: "Join industry experts for a discussion on AI ethics",
+          date: "2024-02-20",
+          time: "18:00",
+          duration: "2 hours",
+          location: "Auditorium A",
+          capacity: 200,
+          registeredCount: 180,
+          status: "upcoming",
+          category: "Panel Discussion",
+          organizer: "Prof. Michael Rodriguez"
+        }
+      ];
+      console.log("Events loaded:", events);
+    } catch (error) {
+      errorEvents = "Error loading events";
+      console.error("Exception loading events:", error);
     }
     loadingEvents = false;
+    
+    console.log("All data fetching completed");
   });
+
+
 
   // Theme toggle
   let darkMode = false;
@@ -97,14 +236,14 @@
 >
   <!-- Header -->
   <header
-    class={`${darkMode ? "bg-gray-800" : "bg-gray-800"} text-white p-4 shadow`}
+    class={`${darkMode ? "bg-gray-800" : "bg-gray-800"} text-white p-2 shadow`}
   >
     <div class="container mx-auto flex justify-between items-center max-w-7xl">
       <div class="flex items-center space-x-2">
         <img
-          src="data:image/png;base64,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"
+          src="/mlclublogo.png"
           alt="ML Club Logo"
-          class="h-10 w-10"
+          class="h-16"
         />
         <h1 class="text-xl font-bold">ML Club Admin Panel</h1>
       </div>
@@ -188,7 +327,23 @@
         class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
         <h2 class="text-xl font-semibold mb-6">Member Management</h2>
-        {#if loadingMembers}
+        
+        {#if connectionError}
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong class="font-bold">Connection Error:</strong>
+            <span class="block sm:inline">{connectionError}</span>
+            <div class="mt-2 text-sm">
+              <p>To fix this:</p>
+              <ol class="list-decimal list-inside ml-4">
+                <li>Create a <code>.env.local</code> file in your project root</li>
+                <li>Add your Supabase credentials:</li>
+                <li><code>PUBLIC_SUPABASE_URL=your_supabase_project_url</code></li>
+                <li><code>PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key</code></li>
+                <li>Restart your development server</li>
+              </ol>
+            </div>
+          </div>
+        {:else if loadingMembers}
           <div>Loading members...</div>
         {:else if errorMembers}
           <div class="text-red-500">{errorMembers}</div>
@@ -211,7 +366,7 @@
                   >
                   <th
                     class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Joined</th
+                    >Batch</th
                   >
                 </tr>
               </thead>
@@ -220,10 +375,14 @@
               >
                 {#each members as member (member.id)}
                   <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.role}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.created_at?.split("T")[0]}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      {member.first_name && member.last_name 
+                        ? `${member.first_name} ${member.last_name}` 
+                        : member.first_name || member.last_name || 'N/A'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.email || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.role || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{member.batch || 'N/A'}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -256,11 +415,11 @@
                   >
                   <th
                     class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Lead</th
+                    >Created By</th
                   >
                   <th
                     class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Deadline</th
+                    >Created</th
                   >
                 </tr>
               </thead>
@@ -269,10 +428,10 @@
               >
                 {#each projects as project (project.id)}
                   <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.title}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.status}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.lead}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.deadline}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.status || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.user_id || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{project.created_at?.split("T")[0] || 'N/A'}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -309,7 +468,7 @@
                   >
                   <th
                     class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Date</th
+                    >Created</th
                   >
                 </tr>
               </thead>
@@ -318,10 +477,10 @@
               >
                 {#each blogs as blog (blog.id)}
                   <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.title}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.author}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.status}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.created_at?.split("T")[0]}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.title || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.user_id || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.status || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{blog.created_at?.split("T")[0] || 'N/A'}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -358,7 +517,7 @@
                   >
                   <th
                     class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Attendees</th
+                    >Created By</th
                   >
                 </tr>
               </thead>
@@ -370,7 +529,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">{event.title}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{event.date}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{event.location}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{event.attendees}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{event.organizer}</td>
                   </tr>
                 {/each}
               </tbody>
