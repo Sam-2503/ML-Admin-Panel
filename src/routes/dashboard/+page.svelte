@@ -1,4 +1,5 @@
 <script lang="ts">
+  import '../../app.css';
   import { onMount } from "svelte";
   import { supabase } from "$lib/supabase";
   
@@ -231,311 +232,238 @@
   }
 </script>
 
-<div
-  class={`min-h-screen ${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}
->
-  <!-- Header -->
-  <header
-    class={`${darkMode ? "bg-gray-800" : "bg-gray-800"} text-white p-2 shadow`}
-  >
-    <div class="container mx-auto flex justify-between items-center max-w-7xl">
-      <div class="flex items-center space-x-2">
-        <img
-          src="/mlclublogo.png"
-          alt="ML Club Logo"
-          class="h-16"
-        />
-        <h1 class="text-xl font-bold">ML Club Admin Panel</h1>
+
+<div class={`min-h-screen ${darkMode ? "bg-base-200 text-base-content" : "bg-base-100 text-base-content"} flex`}>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-base-300 flex flex-col justify-between py-8 px-6">
+    <div>
+      <div class="flex items-center mb-10">
+        <img src="/mlclublogo.png" alt="ML Club Logo" class="h-10 mr-3" />
+        <span class="text-lg font-bold tracking-wide">Admin Panel</span>
       </div>
-      <div class="flex items-center space-x-4">
-        <button
-          on:click={toggleTheme}
-          class={`p-2 rounded-full ${darkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-700 hover:bg-gray-600"}`}
-          title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {#if darkMode}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          {:else}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
-              />
-            </svg>
-          {/if}
-        </button>
-        <button
-          class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
-          on:click={logout}
-        >
-          Logout
-        </button>
-      </div>
+      <ul class="menu menu-lg bg-base-300 rounded-box">
+        <li>
+          <button class={activeTab === "members" ? "active" : ""} on:click={() => (activeTab = "members")}>
+            <span class="flex items-center gap-2">
+              <i class="fa fa-users"></i> Members
+            </span>
+          </button>
+        </li>
+        <li>
+          <button class={activeTab === "events" ? "active" : ""} on:click={() => (activeTab = "events")}>
+            <span class="flex items-center gap-2">
+              <i class="fa fa-calendar"></i> Events
+            </span>
+          </button>
+        </li>
+        <li>
+          <button class={activeTab === "projects" ? "active" : ""} on:click={() => (activeTab = "projects")}>
+            <span class="flex items-center gap-2">
+              <i class="fa fa-folder"></i> Projects
+            </span>
+          </button>
+        </li>
+        <li>
+          <button class={activeTab === "blogs" ? "active" : ""} on:click={() => (activeTab = "blogs")}>
+            <span class="flex items-center gap-2">
+              <i class="fa fa-file-alt"></i> Blogs
+            </span>
+          </button>
+        </li>
+      </ul>
     </div>
-  </header>
+    <div>
+      <button class="btn btn-outline btn-error w-full mt-4" on:click={logout}>
+        <i class="fa fa-sign-out-alt mr-2"></i> Logout
+      </button>
+    </div>
+  </aside>
 
   <!-- Main Content -->
-  <main class="container mx-auto p-4 max-w-7xl">
-    <!-- Tab Navigation -->
-    <div
-      class={`flex border-b ${darkMode ? "border-gray-700" : "border-gray-200"} mb-6`}
-    >
-      <button
-        class={`px-4 py-2 font-medium ${activeTab === "members" ? `${darkMode ? "text-indigo-400 border-b-2 border-indigo-400" : "text-indigo-600 border-b-2 border-indigo-600"}` : `${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"}`}`}
-        on:click={() => (activeTab = "members")}
-      >
-        Members
-      </button>
-      <button
-        class={`px-4 py-2 font-medium ${activeTab === "projects" ? `${darkMode ? "text-indigo-400 border-b-2 border-indigo-400" : "text-indigo-600 border-b-2 border-indigo-600"}` : `${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"}`}`}
-        on:click={() => (activeTab = "projects")}
-      >
-        Projects
-      </button>
-      <button
-        class={`px-4 py-2 font-medium ${activeTab === "blogs" ? `${darkMode ? "text-indigo-400 border-b-2 border-indigo-400" : "text-indigo-600 border-b-2 border-indigo-600"}` : `${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"}`}`}
-        on:click={() => (activeTab = "blogs")}
-      >
-        Blogs
-      </button>
-      <button
-        class={`px-4 py-2 font-medium ${activeTab === "events" ? `${darkMode ? "text-indigo-400 border-b-2 border-indigo-400" : "text-indigo-600 border-b-2 border-indigo-600"}` : `${darkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"}`}`}
-        on:click={() => (activeTab = "events")}
-      >
-        Events
-      </button>
-    </div>
+  <main class="flex-1 p-10">
+    <h1 class="text-3xl font-bold mb-8 capitalize">{activeTab}</h1>
 
     <!-- Members Tab -->
     {#if activeTab === "members"}
-      <div
-        class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
-      >
-        <h2 class="text-xl font-semibold mb-6">Member Management</h2>
-        
-        {#if connectionError}
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <strong class="font-bold">Connection Error:</strong>
-            <span class="block sm:inline">{connectionError}</span>
-            <div class="mt-2 text-sm">
-              <p>To fix this:</p>
-              <ol class="list-decimal list-inside ml-4">
-                <li>Create a <code>.env.local</code> file in your project root</li>
-                <li>Add your Supabase credentials:</li>
-                <li><code>PUBLIC_SUPABASE_URL=your_supabase_project_url</code></li>
-                <li><code>PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key</code></li>
-                <li>Restart your development server</li>
-              </ol>
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="card-title">Members List</h2>
+            <div class="flex gap-2">
+              <button class="btn btn-primary">Add Member</button>
+              <button class="btn btn-outline">Change Member Role</button>
             </div>
           </div>
-        {:else if loadingMembers}
-          <div>Loading members...</div>
-        {:else if errorMembers}
-          <div class="text-red-500">{errorMembers}</div>
-        {:else}
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-                <tr>
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Name</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Email</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Role</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Batch</th
-                  >
-                </tr>
-              </thead>
-              <tbody
-                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-              >
-                {#each members as member (member.id)}
-                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {member.first_name && member.last_name 
-                        ? `${member.first_name} ${member.last_name}` 
-                        : member.first_name || member.last_name || 'N/A'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.email || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.role || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{member.batch || 'N/A'}</td>
+          {#if connectionError}
+            <div class="alert alert-error mb-4">
+              <span>{connectionError}</span>
+            </div>
+          {:else if loadingMembers}
+            <div class="flex justify-center items-center"><span class="loading loading-spinner loading-lg"></span></div>
+          {:else if errorMembers}
+            <div class="alert alert-error mb-4">
+              <span>{errorMembers}</span>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Batch</th>
                   </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {/if}
+                </thead>
+                <tbody>
+                  {#each members as member (member.id)}
+                    <tr>
+                      <td>
+                        {member.first_name && member.last_name
+                          ? `${member.first_name} ${member.last_name}`
+                          : member.first_name || member.last_name || 'N/A'}
+                      </td>
+                      <td>{member.email || 'N/A'}</td>
+                      <td>
+                        {#if member.role === 'super_admin'}
+                          <div class = "badge badge-accent">
+                            Super Admin
+                          </div>
+                        {:else if member.role === 'admin'}
+                          <div class = "badge badge-primary">
+                            Admin
+                          </div>
+                        {:else if member.role === 'member'}
+                          <div class = "badge badge-secondary">
+                            Member
+                          </div>
+                        {/if}
+                      </td>
+                      <td>{member.batch || 'N/A'}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        </div>
       </div>
-    {:else if activeTab === "projects"}
-      <!-- Projects Tab -->
-      <div
-        class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
-      >
-        <h2 class="text-xl font-semibold mb-6">Project Management</h2>
-        {#if loadingProjects}
-          <div>Loading projects...</div>
-        {:else if errorProjects}
-          <div class="text-red-500">{errorProjects}</div>
-        {:else}
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-                <tr>
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Title</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Status</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Created By</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Created</th
-                  >
-                </tr>
-              </thead>
-              <tbody
-                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-              >
-                {#each projects as project (project.id)}
-                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.title || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.status || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.user_id || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{project.created_at?.split("T")[0] || 'N/A'}</td>
+    {/if}
+
+    <!-- Events Tab -->
+    {#if activeTab === "events"}
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title mb-6">Events List</h2>
+          {#if loadingEvents}
+            <div class="flex justify-center items-center"><span class="loading loading-spinner loading-lg"></span></div>
+          {:else if errorEvents}
+            <div class="alert alert-error mb-4">
+              <span>{errorEvents}</span>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Organizer</th>
                   </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {/if}
+                </thead>
+                <tbody>
+                  {#each events as event (event.id)}
+                    <tr>
+                      <td>{event.title}</td>
+                      <td>{event.date}</td>
+                      <td>{event.location}</td>
+                      <td>{event.organizer}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        </div>
       </div>
-    {:else if activeTab === "blogs"}
-      <!-- Blogs Tab -->
-      <div
-        class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
-      >
-        <h2 class="text-xl font-semibold mb-6">Blog Management</h2>
-        {#if loadingBlogs}
-          <div>Loading blogs...</div>
-        {:else if errorBlogs}
-          <div class="text-red-500">{errorBlogs}</div>
-        {:else}
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-                <tr>
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Title</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Author</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Status</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Created</th
-                  >
-                </tr>
-              </thead>
-              <tbody
-                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-              >
-                {#each blogs as blog (blog.id)}
-                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.title || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.user_id || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.status || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{blog.created_at?.split("T")[0] || 'N/A'}</td>
+    {/if}
+
+    <!-- Projects Tab -->
+    {#if activeTab === "projects"}
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title mb-6">Projects List</h2>
+          {#if loadingProjects}
+            <div class="flex justify-center items-center"><span class="loading loading-spinner loading-lg"></span></div>
+          {:else if errorProjects}
+            <div class="alert alert-error mb-4">
+              <span>{errorProjects}</span>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th>Created</th>
                   </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {/if}
+                </thead>
+                <tbody>
+                  {#each projects as project (project.id)}
+                    <tr>
+                      <td>{project.title || 'N/A'}</td>
+                      <td>{project.status || 'N/A'}</td>
+                      <td>{project.user_id || 'N/A'}</td>
+                      <td>{project.created_at?.split("T")[0] || 'N/A'}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        </div>
       </div>
-    {:else if activeTab === "events"}
-      <!-- Events Tab -->
-      <div
-        class={`rounded-lg shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
-      >
-        <h2 class="text-xl font-semibold mb-6">Event Management</h2>
-        {#if loadingEvents}
-          <div>Loading events...</div>
-        {:else if errorEvents}
-          <div class="text-red-500">{errorEvents}</div>
-        {:else}
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class={darkMode ? "bg-gray-700" : "bg-gray-50"}>
-                <tr>
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Title</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Date</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Location</th
-                  >
-                  <th
-                    class={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${darkMode ? "text-gray-300" : "text-gray-500"}`}
-                    >Created By</th
-                  >
-                </tr>
-              </thead>
-              <tbody
-                class={`divide-y ${darkMode ? "divide-gray-700 bg-gray-800" : "divide-gray-200 bg-white"}`}
-              >
-                {#each events as event (event.id)}
-                  <tr class={darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                    <td class="px-6 py-4 whitespace-nowrap">{event.title}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{event.date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{event.location}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{event.organizer}</td>
+    {/if}
+
+    <!-- Blogs Tab -->
+    {#if activeTab === "blogs"}
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title mb-6">Blogs List</h2>
+          {#if loadingBlogs}
+            <div class="flex justify-center items-center"><span class="loading loading-spinner loading-lg"></span></div>
+          {:else if errorBlogs}
+            <div class="alert alert-error mb-4">
+              <span>{errorBlogs}</span>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="table table-zebra">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                    <th>Created</th>
                   </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {/if}
+                </thead>
+                <tbody>
+                  {#each blogs as blog (blog.id)}
+                    <tr>
+                      <td>{blog.title || 'N/A'}</td>
+                      <td>{blog.user_id || 'N/A'}</td>
+                      <td>{blog.status || 'N/A'}</td>
+                      <td>{blog.created_at?.split("T")[0] || 'N/A'}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+        </div>
       </div>
     {/if}
   </main>
