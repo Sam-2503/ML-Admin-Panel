@@ -1,4 +1,38 @@
+import { fail, json } from "@sveltejs/kit";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "$lib/supabase";
+import {
+  PUBLIC_SUPABASE_URL,
+  PUBLIC_SUPABASE_ANON_KEY,
+} from "$env/static/public";
+
+import { PRIVATE_SUPABASE_SERVICE_ROLE_KEY } from "$env/static/private";
+
+const supabaseUrl = PUBLIC_SUPABASE_URL;
+const supabaseKey = PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = PRIVATE_SUPABASE_SERVICE_ROLE_KEY;
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+export const actions = {
+  addMember: async ({ request }) => {
+    const formData = await request.formData();
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const role = formData.get("role") as string;
+
+    // Invite user via Supabase Admin API
+    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: { name, role },
+    });
+
+    if (error) {
+      return fail(400, { error: error.message });
+    }
+
+    return { success: true };
+  },
+};
 
 export async function load() {
   let connectionError = "";

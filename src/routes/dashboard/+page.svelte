@@ -230,6 +230,48 @@
   function logout() {
     window.location.href = "/logout";
   }
+
+  // Modal state
+  let showAddMemberModal = false;
+  let showChangeRoleModal = false;
+  let selectedMemberId: number | null = null;
+  let selectedNewRole = "";;
+
+  // Form fields
+  let newMemberName = "";
+  let newMemberEmail = "";
+  let newMemberRole = "member";
+  let sendInvitation = true;
+
+  function openAddMemberModal() {
+    showAddMemberModal = true;
+  }
+  function closeAddMemberModal() {
+    showAddMemberModal = false;
+    newMemberName = "";
+    newMemberEmail = "";
+    newMemberRole = "member";
+    sendInvitation = true;
+  }
+  function submitAddMember() {
+    // TODO: Add member logic here (call server action or Supabase)
+    closeAddMemberModal();
+  }
+
+  function openChangeRoleModal() {
+    showChangeRoleModal = true;
+    selectedMemberId = null;
+    selectedNewRole = "";
+  }
+  function closeChangeRoleModal() {
+    showChangeRoleModal = false;
+    selectedMemberId = null;
+    selectedNewRole = "";
+  }
+  function submitChangeRole() {
+    // TODO: Add logic to update member role (call server action or Supabase)
+    closeChangeRoleModal();
+  }
 </script>
 
 
@@ -290,8 +332,9 @@
           <div class="flex justify-between items-center mb-6">
             <h2 class="card-title">Members List</h2>
             <div class="flex gap-2">
-              <button class="btn btn-primary">Add Member</button>
-              <button class="btn btn-outline">Change Member Role</button>
+              <!-- Replace Add Member button -->
+              <button class="btn btn-primary" on:click={openAddMemberModal}>Add Member</button>
+              <button class="btn btn-outline" on:click={openChangeRoleModal}>Change Member Role</button>
             </div>
           </div>
           {#if connectionError}
@@ -465,6 +508,88 @@
           {/if}
         </div>
       </div>
+    {/if}
+
+    <!-- Add Member Modal -->
+    {#if showAddMemberModal}
+      <dialog class="modal modal-open">
+        <form method="POST" action="?/addMember" class="modal-box bg-[#23243a] text-white max-w-lg">
+          <h3 class="font-bold text-2xl mb-6">Add Member</h3>
+          <div class="form-control mb-4">
+            <label class="label" for="new-member-name">
+              <span class="label-text text-base-content">Name</span>
+            </label>
+            <input id="new-member-name" name="name" type="text" class="input w-full outline-none" bind:value={newMemberName} required />
+          </div>
+          <div class="form-control mb-4">
+            <label class="label" for="new-member-email">
+              <span class="label-text text-base-content">Email</span>
+            </label>
+            <input id="new-member-email" name="email" type="email" class="input w-full outline-none" bind:value={newMemberEmail} required />
+          </div>
+          <div class="form-control mb-4">
+            <label class="label" for="new-member-role">
+              <span class="label-text text-base-content">Role</span>
+            </label>
+            <select id="new-member-role" name="role" class="select outline-none w-full" bind:value={newMemberRole}>
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+          <div class="form-control mb-6">
+            <label class="cursor-pointer flex items-center gap-2">
+              <input type="checkbox" class="checkbox checkbox-primary" checked disabled />
+              <span class="text-base-content">Send invitation link</span>
+            </label>
+            <span class="text-xs text-gray-400 ml-7">The new member will receive an email to set their own password.</span>
+          </div>
+          <div class="modal-action flex justify-end gap-2">
+            <button type="button" class="btn btn-outline" on:click={closeAddMemberModal}>Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+        <button type="button" class="modal-backdrop w-full h-full absolute top-0 left-0" on:click={closeAddMemberModal} aria-label="Close modal"></button>
+      </dialog>
+    {/if}
+
+    <!-- Change Role Modal -->
+    {#if showChangeRoleModal}
+      <dialog class="modal modal-open">
+        <form method="dialog" class="modal-box bg-[#23243a] text-white max-w-lg">
+          <h3 class="font-bold text-2xl mb-6">Change Member Role</h3>
+          <div class="form-control mb-4">
+            <label class="label" for="select-member">
+              <span class="label-text text-base-content">Member</span>
+            </label>
+            <select id="select-member" class="select outline-none w-full" bind:value={selectedMemberId}>
+              <option value="" disabled selected>Select a member</option>
+              {#each members as member}
+                <option value={member.id}>
+                  {member.first_name && member.last_name
+                    ? `${member.first_name} ${member.last_name}`
+                    : member.first_name || member.last_name || member.email || 'N/A'}
+              </option>
+              {/each}
+            </select>
+          </div>
+          <div class="form-control mb-4">
+            <label class="label" for="new-role">
+              <span class="label-text text-base-content">New Role</span>
+            </label>
+            <select id="new-role" class="select outline-none w-full" bind:value={selectedNewRole}>
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+          <div class="modal-action flex justify-end gap-2">
+            <button type="button" class="btn btn-outline" on:click={closeChangeRoleModal}>Cancel</button>
+            <button type="button" class="btn btn-primary" on:click={submitChangeRole}>Submit</button>
+          </div>
+        </form>
+        <button type="button" class="modal-backdrop w-full h-full absolute top-0 left-0" on:click={closeChangeRoleModal} aria-label="Close modal"></button>
+      </dialog>
     {/if}
   </main>
 </div>
